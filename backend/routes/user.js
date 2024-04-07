@@ -1,7 +1,7 @@
 const express = require("express");
 const { z } = require("zod");
 const router = express.Router();
-const { User } = require("../db");
+const { User, Account } = require("../db");
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../config");
 const bcrypt = require("bcrypt");
@@ -18,7 +18,7 @@ const UserSchema = z.object({
 	lastName: z.string(),
 });
 
-//to sign up
+//to signUp
 router.post("/signup", async (req, res) => {
 	const { username, password, firstName, lastName } = req.body;
 
@@ -52,6 +52,13 @@ router.post("/signup", async (req, res) => {
 			newUser.password = hashPassword;
 			await newUser.save();
 			const userId = newUser._id;
+
+			//creating an account to the user, we can also use Account.create() method
+			const newAccount = new Account({
+				userId: userId,
+				balance: 1 + Math.random() * 10000,
+			});
+
 			const token = jwt.sign({ userId }, JWT_SECRET);
 			res.status(200).json({
 				message: `${userId} is the userId of the newly added user`,

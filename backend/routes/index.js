@@ -1,13 +1,17 @@
+/* rootRouter is the router that holds all the routers with respect to the endPoints */
+
 const express = require("express");
 const userRouter = require("./user");
 const { z } = require("zod");
 const { authMiddleware } = require("../middleware");
 const { User } = require("../db");
+const { accountRouter } = require("./account");
 
 const app = express();
 const router = express.Router();
 
 app.use("/user", userRouter);
+app.use("/account", accountRouter);
 
 const UpdateBody = z.object({
 	username: z.string().optional(),
