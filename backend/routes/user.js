@@ -106,4 +106,47 @@ router.post("/signin", async (req, res) => {
 	}
 });
 
+//to get the user details based on a search.
+
+const QueryParams = z.object({
+	filter: z.string(),
+});
+
+router.get("/bulk", (req, res) => {
+	//step 1 : get the query parameters object
+	const params = req.query;
+	const { success, data } = QueryParams.safeParse(params);
+
+	if (!success) {
+		res.status(411).json({ message: "no query passed" });
+		return;
+	}
+
+	//paramas is an ojbect having filter property and a value
+	const { filter } = data;
+
+	// Example: Find users with either firstName or lastName
+	const query = {
+		$or: [{ firstName: filter }, { lastName: filter }],
+	};
+
+	//now we are trying to get the resulst from the database via the filter query
+	User.find(query, (err, data) => {
+		if (err) {
+			res.status(404).json({
+				message: "No users are found",
+			});
+		} else {
+			res.status(200).json({
+				users: data.map((user) => ({
+					userName: user.userName,
+					firstName: user.firstName,
+					lastName: user.lastName,
+					_id: user._id,
+				})),
+			});
+		}
+	});
+});
+
 module.exports = router;

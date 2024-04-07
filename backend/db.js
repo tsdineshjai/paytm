@@ -60,8 +60,22 @@ UserSchema.methods.validatePassword = async function (candidatePassword) {
 //creating a User Model aka creating a class
 const User = mongoose.model("USER", UserSchema);
 
-//instantiating the class
+const AccountSchema = new mongoose.Schema({
+	userId: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "User", //this refferring to the document of the User Model
+		//for value we have to just metnion ref:user._id
+		required: true,
+	},
+	balance: {
+		type: Number,
+		required: true,
+	},
+});
+
+const Account = mongoose.model("Account", AccountSchema);
 
 module.exports = {
 	User,
+	Account,
 };
