@@ -5,6 +5,7 @@ const { User, Account } = require("../db");
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../config");
 const bcrypt = require("bcrypt");
+const { authMiddleware } = require("../middleware");
 
 //creating a User Schema for zod input validation
 
@@ -54,8 +55,8 @@ router.post("/signup", async (req, res) => {
 			const userId = newUser._id;
 
 			//creating an account to the user, we can also use Account.create() method
-			const newAccount = new Account({
-				userId: userId,
+			await Account.create({
+				userId,
 				balance: 1 + Math.random() * 10000,
 			});
 
@@ -104,6 +105,7 @@ router.post("/signin", async (req, res) => {
 			const token = jwt.sign({ userId }, JWT_SECRET);
 			res.status(200).json({
 				token,
+				message: "login is successful",
 			});
 		}
 	} else {
@@ -113,13 +115,36 @@ router.post("/signin", async (req, res) => {
 	}
 });
 
+//api for put request
+const UpdateBody = z.object({
+	username: z.string().optional(),
+	password: z.string().optional(),
+	lastName: z.string().optional(),
+});
+
+router.put("/", authMiddleware, async (req, res) => {
+	const { success } = UpdateBody.safeParse(req.body);
+
+	if (!success) {
+		res.status(411).json({
+			message: "error while updating information",
+		});
+	}
+
+	//to find the record and update it
+	await User.updateOne({ _id: req.userId }, req.body);
+	res.status(200).json({
+		message: "updated Successfully",
+	});
+});
+
 //to get the user details based on a search.
 
 const QueryParams = z.object({
 	filter: z.string(),
 });
 
-router.get("/bulk", (req, res) => {
+router.get("/bulk", async (req, res) => {
 	//step 1 : get the query parameters object
 	const params = req.query;
 	const { success, data } = QueryParams.safeParse(params);
@@ -134,25 +159,26 @@ router.get("/bulk", (req, res) => {
 
 	// Example: Find users with either firstName or lastName
 	const query = {
-		$or: [{ firstName: filter }, { lastName: filter }],
+		$or: [
+			{
+				firstName: filter,
+			},
+			{
+				lastName: filter,
+			},
+		],
 	};
 
 	//now we are trying to get the resulst from the database via the filter query
-	User.find(query, (err, data) => {
-		if (err) {
-			res.status(404).json({
-				message: "No users are found",
-			});
-		} else {
-			res.status(200).json({
-				users: data.map((user) => ({
-					userName: user.userName,
-					firstName: user.firstName,
-					lastName: user.lastName,
-					_id: user._id,
-				})),
-			});
-		}
+	const users = await User.find(query);
+
+	res.status(200).json({
+		users: users.map((user) => ({
+			userName: user.username,
+			firstName: user.firstName,
+			lastName: user.lastName,
+			_id: user._id,
+		})),
 	});
 });
 

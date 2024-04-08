@@ -12,7 +12,7 @@ async function authMiddleware(req, res, next) {
 		});
 	}
 
-	const token = Authorization.split(" ")[1];
+	const token = authHeader.split(" ")[1];
 	jwt.verify(token, JWT_SECRET, (err, payload) => {
 		if (err) {
 			res.status(403).json({

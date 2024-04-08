@@ -52,6 +52,7 @@ UserSchema.methods.createHash = async function (plainTextPassword) {
 };
 
 //For validation, get the password from DB (this.password --> hashPassword) and compare it to the input Password provided by the client
+//note: we dont implement this method
 UserSchema.methods.validatePassword = async function (candidatePassword) {
 	//returns a boolean indicating if passwords matches or not
 	return await bcrypt.compare(candidatePassword, this.password);

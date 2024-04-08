@@ -7,17 +7,13 @@ const accountRouter = express.Router();
 
 //end point to get the info about the balance
 
-accountRouter.get("/balance", authMiddleware, (req, res) => {
-	Account.findOne({ userId: req.userId }, (err, payload) => {
-		//payload refers to the account Schema
-		if (err) {
-			res
-				.status(404)
-				.json({ message: "Problem encountered due to some error" });
-		}
-		res.status(200).json({
-			messsage: `${payload.balance}`,
-		});
+accountRouter.get("/balance", authMiddleware, async (req, res) => {
+	const account = await Account.findOne({
+		userId: req.userId,
+	});
+
+	res.json({
+		balance: account.balance,
 	});
 });
 
@@ -25,7 +21,7 @@ accountRouter.get("/balance", authMiddleware, (req, res) => {
 
 const transferSchema = z.object({
 	to: z.string().trim(),
-	amount: z.Number(),
+	amount: z.number(),
 });
 
 accountRouter.post("/transfer", authMiddleware, async (req, res) => {
@@ -98,6 +94,4 @@ $inc is a MongoDB update operator that increments the value of the specified fie
 
 */
 
-module.exports = {
-	accountRouter,
-};
+module.exports = accountRouter;

@@ -7,16 +7,8 @@ const app = express();
 app.use(cors()); //enabling the cross origing resoure sharing policy since frontend and backend are two differnt origins,
 //frontend will request from backend.
 
-app.use(express.json()) //parses the JSON  //request body-parser
+app.use(express.json()); //parses the JSON  //request body-parser
 app.use("/api/v1", rootRouter);
-
-app.get("/", (req, res) => {
-	res.send(
-		JSON.stringify({
-			message: "connection is successful",
-		})
-	);
-});
 
 app.listen(3000, () => {
 	console.log(`server is up and running`);
