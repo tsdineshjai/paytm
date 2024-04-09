@@ -1,5 +1,6 @@
 const express = require("express");
-const { Account } = require("../db");
+const mongoose = require("mongoose");
+const { Account, User } = require("../db");
 const { authMiddleware } = require("../middleware");
 const { z } = require("zod");
 
@@ -20,7 +21,7 @@ accountRouter.get("/balance", authMiddleware, async (req, res) => {
 //API endpoint to transfer the money to another account
 
 const transferSchema = z.object({
-	to: z.string().trim(),
+	to: z.string(),
 	amount: z.number(),
 });
 
@@ -40,26 +41,27 @@ accountRouter.post("/transfer", authMiddleware, async (req, res) => {
 		await session.abortTransaction();
 		return;
 	}
-	const { to: targetAccount, amount: fromAccountBalance } = data;
+	const { to: targetAccount, amount: transferringAmount } = data;
 
 	//fetch the accounts within the transaction
 	const fromAccount = await Account.findOne({ userId: req.userId }).session(
 		session
 	);
-	if (!fromAccount || fromAccount.balance < fromAccountBalance) {
+
+	if (!fromAccount || fromAccount.balance < transferringAmount) {
 		await session.abortTransaction();
 		return res.status(400).json({ message: "Insufficient balance" });
 	}
 
 	//find the account to which transfer needs to be made.
 
-	const toAccount = await Account.findOne({ username: targetAccount }).session(
+	const toAccount = await Account.findOne({ userId: targetAccount }).session(
 		session
 	);
 
 	if (!toAccount) {
 		await session.abortTransaction();
-		return res.status(400).json({ message: "Invalid Account" });
+		return res.status(400).json({ message: "Invalid To Account" });
 	}
 
 	//making the transfer if fromAccount has enough balance and there is active toAccount
@@ -67,24 +69,21 @@ accountRouter.post("/transfer", authMiddleware, async (req, res) => {
 	//debiting amount from the transferor:fromAccount
 	await Account.updateOne(
 		{ userId: req.userId },
-		{ $inc: { balance: -amount } }
+		{ $inc: { balance: -transferringAmount } }
 	).session(session);
 
-	//crediting the amount to the transferee
+	//crediting the transferringAmount to the transferee
 
 	await Account.updateOne(
 		{ username: targetAccount },
-		{ $inc: { balance: amount } }.session(session)
-	);
+		{ $inc: { balance: transferringAmount } }
+	).session(session);
 
 	//commitiing the transactions
 	await session.commitTransaction();
 	res.status(200).json({
 		message: "Transfer successful",
 	});
-
-	//finding the user and update.
-	Account.findOneAndUpdate({ username: targetAccount }, { amount });
 });
 
 /* 
