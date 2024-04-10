@@ -7,7 +7,6 @@ import SendMoney from "./components/Send";
 function App() {
 	return (
 		<Router>
-			<h3>This is home page</h3>
 			<Routes>
 				<Route path="/signup" element={<SignUp />} />
 				<Route path="/signin" element={<SignIn />} />
