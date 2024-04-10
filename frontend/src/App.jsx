@@ -8,6 +8,8 @@ function App() {
 	return (
 		<Router>
 			<Routes>
+				<Route path="/" element={<Home />} />
+
 				<Route path="/signup" element={<SignUp />} />
 				<Route path="/signin" element={<SignIn />} />
 				<Route path="/dashboard" element={<Dashboard />} />
@@ -18,3 +20,11 @@ function App() {
 }
 
 export default App;
+
+function Home() {
+	return (
+		<div>
+			<h3>This is the home page</h3>
+		</div>
+	);
+}

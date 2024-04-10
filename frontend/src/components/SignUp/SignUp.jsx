@@ -1,9 +1,13 @@
 import React from "react";
-import styles from "./singup.module.css";
 import { useFormik } from "formik";
 import { ValidationSchema } from "./ValidationSchema";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 function SignUp() {
+	const [error, showError] = React.useState(false);
+	const navigate = useNavigate();
+
 	const { values, handleSubmit, handleChange, errors, handleBlur, touched } =
 		useFormik({
 			initialValues: {
@@ -14,11 +18,47 @@ function SignUp() {
 			},
 			validationSchema: ValidationSchema,
 			onSubmit: (values) => {
-				alert(JSON.stringify(values, null, 2));
+				axios({
+					method: "post",
+					url: "/signup",
+					baseURL: "http://localhost:3000/api/v1/user",
+					data: {
+						...values,
+					},
+				})
+					.then((response) => {
+						if (response.statusText) {
+							navigate("/dashboard");
+						}
+					})
+					.catch((error) => {
+						if (error.response) {
+							showError((currentValue) => !currentValue);
+						} else if (error.request) {
+							console.log(error.request);
+						} else {
+							console.log("Error", error.message);
+						}
+						console.log(error.config);
+					});
 			},
 		});
+
+	function navigateToLoginPage() {
+		navigate("/signin");
+	}
+
+	//early return !
+	if (error) {
+		return (
+			<div className="p-5 bg-red-500 text-white w-1/2 mx-auto mt-40 text-center rounded-md text-2xl">
+				Error occured while executing the Sign up request
+				<p>Please go back and redo </p>
+			</div>
+		);
+	}
 	return (
-		<div className=" container mx-auto border-3 px-4 w-1/4 h-screen mt-15 mb-20">
+		<div className=" container mx-auto border-3 px-4 w-1/3 h-screen mt-15 mb-20 md:w-2/6">
 			<div className="flex flex-col items-center py-2">
 				<h1 className="text-3xl mb-2 font-bold text-green-850">Sign Up</h1>
 				<p className="text-blue-900 mb-5 ">
@@ -38,7 +78,7 @@ function SignUp() {
 					name="username"
 					type="email"
 					onChange={handleChange}
-					value={values.email}
+					value={values.username}
 					className="border-2  rounded-xl text-lg p-1"
 					onBlur={handleBlur}
 				/>
@@ -102,7 +142,10 @@ function SignUp() {
 
 				<p className="text-mustard-100 text-center p-1 text-lg mt-2">
 					Already have an account?{" "}
-					<a className="underline hover:cursor-pointer text-white  hover:text-blue-500 ">
+					<a
+						onClick={navigateToLoginPage}
+						className="underline hover:cursor-pointer text-white  hover:text-blue-500 "
+					>
 						Login
 					</a>
 				</p>
