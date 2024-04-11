@@ -105,7 +105,7 @@ router.post("/signin", async (req, res) => {
 			const token = jwt.sign({ userId }, JWT_SECRET);
 			res.status(200).json({
 				token,
-				message: "login is successful",
+				message: `${userId} user with userId login is successful`,
 			});
 		}
 	} else {
@@ -145,41 +145,55 @@ const QueryParams = z.object({
 });
 
 router.get("/bulk", async (req, res) => {
-	//step 1 : get the query parameters object
-	const params = req.query;
-	const { success, data } = QueryParams.safeParse(params);
+	if (req.query.filter) {
+		//step 1 : get the query parameters object
+		const params = req.query;
+		const { success, data } = QueryParams.safeParse(params);
 
-	if (!success) {
-		res.status(411).json({ message: "no query passed" });
-		return;
+		if (!success) {
+			res.status(411).json({ message: "no query passed" });
+			return;
+		}
+
+		//paramas is an ojbect having filter property and a value
+		const { filter } = data;
+		// Example: Find users with either firstName or lastName
+		const query = {
+			$or: [
+				{
+					firstName: filter,
+				},
+				{
+					lastName: filter,
+				},
+				{
+					_id: filter,
+				},
+			],
+		};
+
+		//now we are trying to get the resulst from the database via the filter query
+		const users = await User.find(query);
+
+		res.status(200).json({
+			users: users.map((user) => ({
+				userName: user.username,
+				firstName: user.firstName,
+				lastName: user.lastName,
+				_id: user._id,
+			})),
+		});
+	} else {
+		const users = await User.find({});
+		res.status(200).json({
+			users: users.map((user) => ({
+				userName: user.username,
+				firstName: user.firstName,
+				lastName: user.lastName,
+				_id: user._id,
+			})),
+		});
 	}
-
-	//paramas is an ojbect having filter property and a value
-	const { filter } = data;
-
-	// Example: Find users with either firstName or lastName
-	const query = {
-		$or: [
-			{
-				firstName: filter,
-			},
-			{
-				lastName: filter,
-			},
-		],
-	};
-
-	//now we are trying to get the resulst from the database via the filter query
-	const users = await User.find(query);
-
-	res.status(200).json({
-		users: users.map((user) => ({
-			userName: user.username,
-			firstName: user.firstName,
-			lastName: user.lastName,
-			_id: user._id,
-		})),
-	});
 });
 
 module.exports = router;

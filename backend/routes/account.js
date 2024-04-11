@@ -42,7 +42,6 @@ accountRouter.post("/transfer", authMiddleware, async (req, res) => {
 		return;
 	}
 	const { to: targetAccount, amount: transferringAmount } = data;
-
 	//fetch the accounts within the transaction
 	const fromAccount = await Account.findOne({ userId: req.userId }).session(
 		session
