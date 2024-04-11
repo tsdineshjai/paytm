@@ -25,6 +25,9 @@ function SignIn() {
 				})
 					.then((response) => {
 						if (response.statusText) {
+							const { message, token } = response.data;
+							const userId = message.split(" ")[0];
+							localStorage.setItem("token", JSON.stringify({ token, userId }));
 							navigate("/dashboard");
 						}
 					})
@@ -45,6 +48,7 @@ function SignIn() {
 		navigate("/signup");
 	}
 	function tryLoginAgain() {
+		showError((currentError) => !currentError);
 		navigate("/signin");
 	}
 
@@ -59,7 +63,7 @@ function SignIn() {
 						onClick={tryLoginAgain}
 						className="underline hover:cursor-pointer text-white  hover:text-blue-500 ml-3"
 					>
-						TryAgain
+						Try Again
 					</a>
 				</p>
 			</div>

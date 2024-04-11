@@ -28,6 +28,9 @@ function SignUp() {
 				})
 					.then((response) => {
 						if (response.statusText) {
+							const { message, token } = response.data;
+							const userId = message.split(" ")[0];
+							localStorage.setItem("token", JSON.stringify({ token, userId}));
 							navigate("/dashboard");
 						}
 					})
